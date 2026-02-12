@@ -28,4 +28,5 @@ O MeuSalão começa como plataforma de visibilidade e agendamento, mas a priorid
 
 - [README.md](README.md) — Descrição geral do projeto
 - [personas.md](personas.md) — Personas de clientes e donos de salão
+- [segmentos.md](segmentos.md) — Segmentos de cliente e subcategorias de serviço
 - [é, não é, faz, não faz.md](é,%20não%20é,%20faz,%20não%20faz.md) — Escopo do produto
