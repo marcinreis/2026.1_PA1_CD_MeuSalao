@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, ChevronRight } from "lucide-react";
+import { Search, MapPin, ChevronRight, Map } from "lucide-react";
 import Navbar from "@/components/navbar";
 import SalaoCard from "@/components/salao-card";
 import { saloes } from "@/lib/mock-data";
@@ -77,6 +77,17 @@ export default function ClientePage() {
               Buscar
             </button>
           </div>
+
+          {/* ── Botão de mapa — logo abaixo da busca ── */}
+          <div className="mt-4 max-w-xl">
+            <Link href="/cliente/mapa">
+              <button className="flex items-center gap-2.5 bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/20 hover:border-white/40 text-white text-sm font-semibold px-5 py-3 rounded-2xl transition-all duration-200 group">
+                <Map className="w-4 h-4 text-violet-300 group-hover:scale-110 transition-transform" />
+                Ver salões no mapa
+                <span className="text-violet-300 text-xs ml-1">→</span>
+              </button>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -114,7 +125,7 @@ export default function ClientePage() {
 
       <div className="max-w-7xl mx-auto px-6 py-8 space-y-10">
 
-        {/* Featured salon (iFood hero card style) */}
+        {/* Featured salon */}
         {!tagSelecionada && !busca && (
           <div>
             <div className="flex items-center justify-between mb-4">

@@ -42,6 +42,8 @@ export type Salao = {
   horariosOcupados: Set<string>; // "YYYY-MM-DD|HH:MM"
   agenda: AgendamentoSalao[];
   buscasSemana: number;
+  lat: number; // latitude
+  lng: number; // longitude
 };
 
 // Next 7 days from 2026-04-15
@@ -76,6 +78,8 @@ export const saloes: Salao[] = [
     descricao: "Salão de bairro com atendimento personalizado. Mais de 15 anos cuidando da beleza das mulheres da região.",
     telefone: "(11) 98765-4321",
     horarioFuncionamento: "Seg–Sáb, 9h–18h",
+    lat: -23.5606,
+    lng: -46.6457,
     servicos: [
       { id: "s1", nome: "Corte feminino", preco: 55, duracao: 60 },
       { id: "s2", nome: "Manicure", preco: 35, duracao: 45 },
@@ -119,6 +123,8 @@ export const saloes: Salao[] = [
     descricao: "Studio premium com 12 profissionais especializados. Referência em coloração e tratamentos capilares avançados na região.",
     telefone: "(11) 3344-5566",
     horarioFuncionamento: "Seg–Sáb, 8h–20h",
+    lat: -23.5614,
+    lng: -46.6565,
     servicos: [
       { id: "s1", nome: "Corte feminino premium", preco: 120, duracao: 60 },
       { id: "s2", nome: "Coloração completa", preco: 280, duracao: 150 },
@@ -162,6 +168,8 @@ export const saloes: Salao[] = [
     descricao: "Barbearia moderna com atendimento para homens e crianças. Especialistas em corte masculino, barba e corte infantil com ambiente divertido.",
     telefone: "(11) 97654-3210",
     horarioFuncionamento: "Seg–Sáb, 9h–19h",
+    lat: -23.5543,
+    lng: -46.6607,
     servicos: [
       { id: "s1", nome: "Corte masculino", preco: 40, duracao: 30 },
       { id: "s2", nome: "Barba completa", preco: 35, duracao: 30 },
@@ -205,6 +213,8 @@ export const saloes: Salao[] = [
     descricao: "Studio especializado em estética facial e corporal. Profissionais certificados em procedimentos de limpeza de pele, design de sobrancelha e depilação.",
     telefone: "(11) 96543-2109",
     horarioFuncionamento: "Seg–Sex, 9h–18h | Sáb, 9h–16h",
+    lat: -23.5648,
+    lng: -46.6736,
     servicos: [
       { id: "s1", nome: "Design de sobrancelha", preco: 45, duracao: 30 },
       { id: "s2", nome: "Limpeza de pele", preco: 120, duracao: 90 },
