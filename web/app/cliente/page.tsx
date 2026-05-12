@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, MapPin, ChevronRight, Map } from "lucide-react";
 import Navbar from "@/components/navbar";
 import SalaoCard from "@/components/salao-card";
+import SalaoFoto from "@/components/salao-foto";
 import { saloes } from "@/lib/mock-data";
 import Link from "next/link";
 
@@ -48,7 +49,7 @@ export default function ClientePage() {
           <div className="flex items-center gap-2 mb-4">
             <div className="flex items-center gap-1.5 bg-white/10 backdrop-blur-sm border border-white/20 text-white/90 text-sm px-3 py-1.5 rounded-full">
               <MapPin className="w-3.5 h-3.5 text-violet-300" />
-              <span>São Paulo, SP</span>
+              <span>Fortaleza, CE</span>
             </div>
           </div>
 
@@ -139,9 +140,10 @@ export default function ClientePage() {
                 <div className="flex flex-col md:flex-row">
                   {/* Photo */}
                   <div className="relative md:w-2/5 h-56 md:h-auto overflow-hidden">
-                    <img
+                    <SalaoFoto
                       src={destaque.foto}
                       alt={destaque.nome}
+                      salaoId={destaque.id}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/40 via-transparent to-transparent" />

@@ -6,6 +6,7 @@ import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { saloes } from "@/lib/mock-data";
 import { useRouter } from "next/navigation";
+import SalaoFoto from "@/components/salao-foto";
 
 // ─── Fix Leaflet default icon bug in Next.js ───────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -20,23 +21,27 @@ L.Icon.Default.mergeOptions({
 });
 
 // ─── Custom pin for salons (violet, matches app theme) ────────────────────
+// IMPORTANTE: divIcon precisa ser memoizado (criado uma vez por salão).
+// Se for recriado a cada render, react-leaflet chama marker.setIcon() e
+// recria o DOM do marker — perdendo os handlers de click do Leaflet.
 function criarIconeSalao(nota: number) {
   const cor =
     nota >= 4.8 ? "#7c3aed" : nota >= 4.6 ? "#8b5cf6" : "#a78bfa";
 
   const svg = `
-    <svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg width="44" height="54" viewBox="0 0 44 54" fill="none" xmlns="http://www.w3.org/2000/svg" style="cursor:pointer;display:block;">
+      <!-- Hit area transparente cobrindo todo o bounding box -->
+      <rect x="0" y="0" width="44" height="54" fill="transparent" pointer-events="all"/>
       <filter id="sombra">
         <feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="rgba(0,0,0,0.25)"/>
       </filter>
-      <g filter="url(#sombra)">
+      <g filter="url(#sombra)" pointer-events="none">
         <circle cx="22" cy="20" r="18" fill="${cor}"/>
         <path d="M22 44 L10 26 Q4 20 10 14 Q16 6 22 4 Q28 6 34 14 Q40 20 34 26 Z" fill="${cor}"/>
         <circle cx="22" cy="20" r="18" fill="${cor}"/>
       </g>
-      <circle cx="22" cy="20" r="11" fill="white" opacity="0.25"/>
-      <!-- Scissors icon -->
-      <g transform="translate(14, 12)" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none">
+      <circle cx="22" cy="20" r="11" fill="white" opacity="0.25" pointer-events="none"/>
+      <g transform="translate(14, 12)" stroke="white" stroke-width="1.8" stroke-linecap="round" fill="none" pointer-events="none">
         <circle cx="3" cy="3" r="2.5"/>
         <circle cx="13" cy="3" r="2.5"/>
         <line x1="5" y1="5" x2="15" y2="15"/>
@@ -53,6 +58,11 @@ function criarIconeSalao(nota: number) {
     popupAnchor: [0, -56],
   });
 }
+
+// Ícones pré-computados por salão (módulo escopo → criados uma única vez)
+const ICONES_SALAO = new Map(
+  saloes.map((s) => [s.id, criarIconeSalao(s.nota)])
+);
 
 // ─── Custom pin for user location (pulsing blue dot) ──────────────────────
 const iconeUsuario = L.divIcon({
@@ -103,6 +113,25 @@ function CentrarNoUsuario({
   return null;
 }
 
+// ─── Forces Leaflet to recompute size after mount ────────────────────────
+// Sem isso, o mapa renderiza com 0×0 quando o container nasce via flexbox
+// (tiles cinza ou em branco). Também recalcula no resize da janela.
+function RecalcularTamanho() {
+  const map = useMap();
+  useEffect(() => {
+    const recalc = () => map.invalidateSize();
+    const t1 = setTimeout(recalc, 0);
+    const t2 = setTimeout(recalc, 250);
+    window.addEventListener("resize", recalc);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      window.removeEventListener("resize", recalc);
+    };
+  }, [map]);
+  return null;
+}
+
 // ─── Star rating helper ────────────────────────────────────────────────────
 function Estrelas({ nota }: { nota: number }) {
   return (
@@ -121,8 +150,8 @@ export default function Mapa() {
   );
   const [erroLocalizacao, setErroLocalizacao] = useState(false);
 
-  // São Paulo center as default
-  const centroInicial: [number, number] = [-23.5614, -46.6565];
+  // Fortaleza center as default (Meireles/Aldeota)
+  const centroInicial: [number, number] = [-3.7320, -38.5060];
 
   useEffect(() => {
     if (!navigator.geolocation) {
@@ -141,7 +170,7 @@ export default function Mapa() {
   }, []);
 
   return (
-    <div style={{ position: "relative", width: "100%", height: "100%" }}>
+    <div style={{ position: "absolute", inset: 0 }}>
       {/* ── Aviso de localização negada ── */}
       {erroLocalizacao && (
         <div
@@ -165,7 +194,7 @@ export default function Mapa() {
           }}
         >
           <span style={{ fontSize: 16 }}>📍</span>
-          Localização não disponível — mostrando São Paulo
+          Localização não disponível — mostrando Fortaleza
         </div>
       )}
 
@@ -227,6 +256,9 @@ export default function Mapa() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
+        {/* Garante que o Leaflet recalcula o tamanho após o mount */}
+        <RecalcularTamanho />
+
         {/* Centraliza no usuário quando posição chega */}
         <CentrarNoUsuario posicao={posicaoUsuario} />
 
@@ -246,7 +278,7 @@ export default function Mapa() {
           <Marker
             key={salao.id}
             position={[salao.lat, salao.lng]}
-            icon={criarIconeSalao(salao.nota)}
+            icon={ICONES_SALAO.get(salao.id)}
           >
             <Popup minWidth={240} maxWidth={280}>
               {/* ── Popup card ── */}
@@ -268,14 +300,11 @@ export default function Mapa() {
                     marginBottom: 10,
                   }}
                 >
-                  <img
+                  <SalaoFoto
                     src={salao.foto}
                     alt={salao.nome}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    salaoId={salao.id}
+                    className="w-full h-full object-cover"
                   />
                 </div>
 

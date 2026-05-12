@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, Star, Clock } from "lucide-react";
 import type { Salao } from "@/lib/mock-data";
+import SalaoFoto from "@/components/salao-foto";
 
 const TAGS_DESTAQUE: Record<string, { label: string; color: string }> = {
   "studio-renata": { label: "Destaque", color: "bg-amber-400 text-amber-900" },
@@ -17,9 +18,10 @@ export default function SalaoCard({ salao }: { salao: Salao }) {
       <div className="bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
         {/* Photo */}
         <div className="relative h-52 overflow-hidden">
-          <img
+          <SalaoFoto
             src={salao.foto}
             alt={salao.nome}
+            salaoId={salao.id}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           {/* Dark gradient at bottom */}

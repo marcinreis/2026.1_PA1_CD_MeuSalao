@@ -4,6 +4,7 @@ import Link from "next/link";
 import Navbar from "@/components/navbar";
 import ServicoItem from "@/components/servico-item";
 import AvaliacaoItem from "@/components/avaliacao-item";
+import SalaoFoto from "@/components/salao-foto";
 import { getSalao } from "@/lib/mock-data";
 
 export default async function PerfilSalaoPage({
@@ -21,7 +22,7 @@ export default async function PerfilSalaoPage({
 
       {/* Hero photo */}
       <div className="relative h-80 overflow-hidden">
-        <img src={salao.foto} alt={salao.nome} className="w-full h-full object-cover" />
+        <SalaoFoto src={salao.foto} alt={salao.nome} salaoId={salao.id} className="w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/10" />
 
         {/* Back button */}

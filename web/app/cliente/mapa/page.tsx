@@ -25,11 +25,11 @@ const Mapa = dynamic(() => import("@/components/ui/mapa"), {
 
 export default function MapaPage() {
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50">
+    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
       <Navbar paginaAtiva="inicio" />
 
       {/* ── Header da página ── */}
-      <div className="bg-white border-b border-gray-100 px-6 py-4">
+      <div className="bg-white border-b border-gray-100 px-6 py-4 shrink-0">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link
@@ -66,7 +66,7 @@ export default function MapaPage() {
       </div>
 
       {/* ── Mapa (ocupa o restante da tela) ── */}
-      <div className="flex-1" style={{ minHeight: "calc(100vh - 120px)" }}>
+      <div className="flex-1 relative min-h-0">
         <Mapa />
       </div>
     </div>
