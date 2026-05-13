@@ -25,7 +25,7 @@ const Mapa = dynamic(() => import("@/components/ui/mapa"), {
 
 export default function MapaPage() {
   return (
-    <div className="h-screen flex flex-col bg-gray-50 overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] md:h-screen flex flex-col bg-gray-50 overflow-hidden">
       <Navbar paginaAtiva="inicio" />
 
       {/* ── Header da página ── */}

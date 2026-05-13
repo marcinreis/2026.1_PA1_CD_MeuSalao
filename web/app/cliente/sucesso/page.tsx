@@ -13,7 +13,7 @@ export default async function SucessoPage({
   const servico = salao?.servicos.find((s) => s.id === servicoId);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       <Navbar paginaAtiva="inicio" />
 
       <div className="max-w-2xl mx-auto px-6 py-16 text-center">

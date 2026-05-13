@@ -35,7 +35,7 @@ export default function ClientePage() {
   const destaque = saloes[1]; // Studio Renata
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
       <Navbar paginaAtiva="inicio" />
 
       {/* Hero */}
