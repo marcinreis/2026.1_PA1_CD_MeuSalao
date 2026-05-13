@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { Search, MapPin, ChevronRight, Map } from "lucide-react";
+import { Search, MapPin, ChevronRight, Map, SlidersHorizontal, X } from "lucide-react";
 import Navbar from "@/components/navbar";
 import SalaoCard from "@/components/salao-card";
 import SalaoFoto from "@/components/salao-foto";
-import { saloes } from "@/lib/mock-data";
+import { saloes, type Salao } from "@/lib/mock-data";
 import Link from "next/link";
 
 const CATEGORIAS = [
@@ -19,9 +19,94 @@ const CATEGORIAS = [
   { emoji: "🌿", label: "Tratamento", tag: "Cabelo" },
 ];
 
+// Converte "0,4 km" → 0.4
+function parseDistancia(d: string): number {
+  return parseFloat(d.replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
+}
+
+// Verifica se está aberto agora dado horarioFuncionamento tipo "Seg–Sáb, 9h–18h"
+// Heurística simples: extrai primeiro e último horário, checa dia da semana.
+function estaAbertoAgora(salao: Salao): boolean {
+  const agora = new Date();
+  const dia = agora.getDay(); // 0=Dom ... 6=Sáb
+  const hora = agora.getHours() + agora.getMinutes() / 60;
+
+  const horario = salao.horarioFuncionamento.toLowerCase();
+  // Domingo: nenhum dos salões abre
+  if (dia === 0) return horario.includes("dom");
+
+  const dentroDoIntervalo = (texto: string) => {
+    const m = texto.match(/(\d{1,2})h.*?(\d{1,2})h/);
+    if (!m) return false;
+    return hora >= parseInt(m[1]) && hora < parseInt(m[2]);
+  };
+
+  // Sábado: pega a parte após "sáb" se houver intervalo separado
+  if (dia === 6) {
+    const sabPart = horario.split("|").find((p) => p.includes("sáb"));
+    if (sabPart) return dentroDoIntervalo(sabPart);
+  }
+  return dentroDoIntervalo(horario.split("|")[0]);
+}
+
+type FiltroDistancia = "any" | "1" | "3";
+type FiltroPreco = "any" | "50" | "100";
+type FiltroNota = "any" | "4.5" | "4.8";
+
+function FiltroPills({
+  label,
+  value,
+  onChange,
+  opcoes,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  opcoes: { value: string; label: string }[];
+}) {
+  return (
+    <div>
+      <p className="text-xs font-semibold text-gray-500 mb-1.5">{label}</p>
+      <div className="flex gap-2 flex-wrap">
+        {opcoes.map((o) => (
+          <button
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className={`px-3 py-1 rounded-lg text-xs font-semibold border transition-colors ${
+              value === o.value
+                ? "bg-violet-700 text-white border-violet-700"
+                : "bg-white text-gray-600 border-gray-200 hover:border-violet-300"
+            }`}
+          >
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function ClientePage() {
   const [busca, setBusca] = useState("");
   const [tagSelecionada, setTagSelecionada] = useState<string | null>(null);
+  const [mostrarFiltros, setMostrarFiltros] = useState(false);
+  const [filtroDistancia, setFiltroDistancia] = useState<FiltroDistancia>("any");
+  const [filtroPreco, setFiltroPreco] = useState<FiltroPreco>("any");
+  const [filtroNota, setFiltroNota] = useState<FiltroNota>("any");
+  const [abertoAgora, setAbertoAgora] = useState(false);
+
+  const filtrosAtivos =
+    (filtroDistancia !== "any" ? 1 : 0) +
+    (filtroPreco !== "any" ? 1 : 0) +
+    (filtroNota !== "any" ? 1 : 0) +
+    (abertoAgora ? 1 : 0);
+
+  function limparFiltros() {
+    setFiltroDistancia("any");
+    setFiltroPreco("any");
+    setFiltroNota("any");
+    setAbertoAgora(false);
+  }
 
   const saloesFiltrados = saloes.filter((s) => {
     const matchBusca =
@@ -29,7 +114,12 @@ export default function ClientePage() {
       s.nome.toLowerCase().includes(busca.toLowerCase()) ||
       s.tags.some((t) => t.toLowerCase().includes(busca.toLowerCase()));
     const matchTag = !tagSelecionada || s.tags.includes(tagSelecionada);
-    return matchBusca && matchTag;
+    const matchDistancia =
+      filtroDistancia === "any" || parseDistancia(s.distancia) <= parseFloat(filtroDistancia);
+    const matchPreco = filtroPreco === "any" || s.precoMinimo <= parseFloat(filtroPreco);
+    const matchNota = filtroNota === "any" || s.nota >= parseFloat(filtroNota);
+    const matchAberto = !abertoAgora || estaAbertoAgora(s);
+    return matchBusca && matchTag && matchDistancia && matchPreco && matchNota && matchAberto;
   });
 
   const destaque = saloes[1]; // Studio Renata
@@ -121,6 +211,86 @@ export default function ClientePage() {
               </button>
             ))}
           </div>
+
+          {/* Filtros avançados */}
+          <div className="mt-3 flex items-center gap-3 flex-wrap">
+            <button
+              onClick={() => setMostrarFiltros((v) => !v)}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs font-semibold transition-all ${
+                filtrosAtivos > 0
+                  ? "bg-violet-50 border-violet-200 text-violet-700"
+                  : "bg-white border-gray-200 text-gray-600 hover:border-violet-300"
+              }`}
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5" />
+              Filtros
+              {filtrosAtivos > 0 && (
+                <span className="bg-violet-700 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] font-bold">
+                  {filtrosAtivos}
+                </span>
+              )}
+            </button>
+            {filtrosAtivos > 0 && (
+              <button
+                onClick={limparFiltros}
+                className="flex items-center gap-1 text-xs text-gray-400 hover:text-gray-700 font-medium"
+              >
+                <X className="w-3 h-3" />
+                Limpar
+              </button>
+            )}
+          </div>
+
+          {mostrarFiltros && (
+            <div className="mt-3 p-4 bg-gray-50 rounded-2xl border border-gray-100 space-y-3">
+              <FiltroPills
+                label="Distância"
+                value={filtroDistancia}
+                onChange={(v) => setFiltroDistancia(v as FiltroDistancia)}
+                opcoes={[
+                  { value: "any", label: "Qualquer" },
+                  { value: "1", label: "Até 1 km" },
+                  { value: "3", label: "Até 3 km" },
+                ]}
+              />
+              <FiltroPills
+                label="Preço a partir de"
+                value={filtroPreco}
+                onChange={(v) => setFiltroPreco(v as FiltroPreco)}
+                opcoes={[
+                  { value: "any", label: "Qualquer" },
+                  { value: "50", label: "Até R$ 50" },
+                  { value: "100", label: "Até R$ 100" },
+                ]}
+              />
+              <FiltroPills
+                label="Avaliação mínima"
+                value={filtroNota}
+                onChange={(v) => setFiltroNota(v as FiltroNota)}
+                opcoes={[
+                  { value: "any", label: "Qualquer" },
+                  { value: "4.5", label: "4,5 ★+" },
+                  { value: "4.8", label: "4,8 ★+" },
+                ]}
+              />
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-xs font-semibold text-gray-500">Aberto agora</span>
+                <button
+                  onClick={() => setAbertoAgora((v) => !v)}
+                  className={`relative w-10 h-6 rounded-full transition-colors ${
+                    abertoAgora ? "bg-violet-700" : "bg-gray-300"
+                  }`}
+                  aria-pressed={abertoAgora}
+                >
+                  <span
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
+                      abertoAgora ? "translate-x-4" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
