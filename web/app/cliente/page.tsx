@@ -116,7 +116,8 @@ export default function ClientePage() {
     const matchTag = !tagSelecionada || s.tags.includes(tagSelecionada);
     const matchDistancia =
       filtroDistancia === "any" || parseDistancia(s.distancia) <= parseFloat(filtroDistancia);
-    const matchPreco = filtroPreco === "any" || s.precoMinimo <= parseFloat(filtroPreco);
+    const matchPreco =
+      filtroPreco === "any" || (s.precoMinimo != null && s.precoMinimo <= parseFloat(filtroPreco));
     const matchNota = filtroNota === "any" || s.nota >= parseFloat(filtroNota);
     const matchAberto = !abertoAgora || estaAbertoAgora(s);
     return matchBusca && matchTag && matchDistancia && matchPreco && matchNota && matchAberto;
@@ -338,8 +339,14 @@ export default function ClientePage() {
                     </div>
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <div>
-                        <p className="text-xs text-gray-400">A partir de</p>
-                        <p className="text-2xl font-black text-violet-700">R$ {destaque.precoMinimo}</p>
+                        {destaque.precoMinimo != null ? (
+                          <>
+                            <p className="text-xs text-gray-400">A partir de</p>
+                            <p className="text-2xl font-black text-violet-700">R$ {destaque.precoMinimo}</p>
+                          </>
+                        ) : (
+                          <p className="text-sm font-semibold text-gray-400">Consultar preço</p>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5">
                         <div className="flex items-center gap-1 bg-amber-50 px-3 py-1.5 rounded-xl">

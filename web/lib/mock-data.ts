@@ -31,7 +31,7 @@ export type Salao = {
   corCapa: string; // tailwind bg color class
   foto: string;
   tags: string[];
-  precoMinimo: number;
+  precoMinimo: number | null; // null = salão ainda não cadastrou preços (US-07, cenário 3)
   endereco: string;
   descricao: string;
   telefone: string;

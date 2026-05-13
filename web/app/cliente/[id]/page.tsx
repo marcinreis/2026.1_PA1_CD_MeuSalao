@@ -106,8 +106,14 @@ export default async function PerfilSalaoPage({
           {/* Sidebar */}
           <div>
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 sticky top-24">
-              <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">A partir de</p>
-              <p className="text-4xl font-black text-violet-700 mb-5">R$ {salao.precoMinimo}</p>
+              {salao.precoMinimo != null ? (
+                <>
+                  <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">A partir de</p>
+                  <p className="text-4xl font-black text-violet-700 mb-5">R$ {salao.precoMinimo}</p>
+                </>
+              ) : (
+                <p className="text-base font-semibold text-gray-400 mb-5">Consultar preço</p>
+              )}
 
               <div className="flex items-center gap-2 mb-6 p-3 bg-amber-50 rounded-xl">
                 <Star className="w-5 h-5 text-amber-400 fill-amber-400 shrink-0" />

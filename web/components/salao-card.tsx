@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { MapPin, Star, Clock } from "lucide-react";
+import { MapPin, Star, Clock, Check, GitCompareArrows } from "lucide-react";
 import type { Salao } from "@/lib/mock-data";
 import SalaoFoto from "@/components/salao-foto";
+import { useComparar } from "@/lib/comparar-store";
 
 const TAGS_DESTAQUE: Record<string, { label: string; color: string }> = {
   "studio-renata": { label: "Destaque", color: "bg-amber-400 text-amber-900" },
@@ -12,6 +15,9 @@ const TAGS_DESTAQUE: Record<string, { label: string; color: string }> = {
 
 export default function SalaoCard({ salao }: { salao: Salao }) {
   const tag = TAGS_DESTAQUE[salao.id];
+  const { isSelected, toggle, full } = useComparar();
+  const selecionado = isSelected(salao.id);
+  const desabilitado = !selecionado && full;
 
   return (
     <Link href={`/cliente/${salao.id}`} className="block group">
@@ -27,10 +33,39 @@ export default function SalaoCard({ salao }: { salao: Salao }) {
           {/* Dark gradient at bottom */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
-          {/* Floating rating badge */}
-          <div className="absolute top-3 right-3 flex items-center gap-1 bg-white rounded-full px-2.5 py-1 shadow-md">
-            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-            <span className="text-xs font-bold text-gray-900">{salao.nota}</span>
+          {/* Top-right: rating + compare toggle */}
+          <div className="absolute top-3 right-3 flex flex-col items-end gap-2">
+            <button
+              type="button"
+              aria-label={selecionado ? "Remover da comparação" : "Adicionar à comparação"}
+              aria-pressed={selecionado}
+              disabled={desabilitado}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!desabilitado) toggle(salao.id);
+              }}
+              title={
+                desabilitado
+                  ? "Você já está comparando 3 salões"
+                  : selecionado
+                    ? "Remover da comparação"
+                    : "Comparar este salão"
+              }
+              className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all ${
+                selecionado
+                  ? "bg-violet-700 text-white"
+                  : desabilitado
+                    ? "bg-white/60 text-gray-300 cursor-not-allowed"
+                    : "bg-white text-gray-600 hover:text-violet-700 hover:scale-110"
+              }`}
+            >
+              {selecionado ? <Check className="w-4 h-4" /> : <GitCompareArrows className="w-4 h-4" />}
+            </button>
+            <div className="flex items-center gap-1 bg-white rounded-full px-2.5 py-1 shadow-md">
+              <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+              <span className="text-xs font-bold text-gray-900">{salao.nota}</span>
+            </div>
           </div>
 
           {/* Tag badge */}
@@ -68,8 +103,14 @@ export default function SalaoCard({ salao }: { salao: Salao }) {
           {/* Footer */}
           <div className="flex items-center justify-between pt-3 border-t border-gray-50">
             <div>
-              <span className="text-xs text-gray-400">A partir de </span>
-              <span className="font-black text-violet-700 text-lg">R$ {salao.precoMinimo}</span>
+              {salao.precoMinimo != null ? (
+                <>
+                  <span className="text-xs text-gray-400">A partir de </span>
+                  <span className="font-black text-violet-700 text-lg">R$ {salao.precoMinimo}</span>
+                </>
+              ) : (
+                <span className="text-sm font-semibold text-gray-400">Consultar preço</span>
+              )}
             </div>
             <div className="flex items-center gap-1 text-xs text-gray-400">
               <Clock className="w-3 h-3" />

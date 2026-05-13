@@ -388,12 +388,14 @@ export default function Mapa() {
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#7c3aed",
+                    color: salao.precoMinimo != null ? "#7c3aed" : "#9ca3af",
                     fontWeight: 600,
                     marginBottom: 12,
                   }}
                 >
-                  A partir de R$ {salao.precoMinimo}
+                  {salao.precoMinimo != null
+                    ? `A partir de R$ ${salao.precoMinimo}`
+                    : "Consultar preço"}
                 </div>
 
                 {/* Tags */}
