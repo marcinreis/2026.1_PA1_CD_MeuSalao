@@ -77,11 +77,18 @@ export default async function SucessoPage({
           Enviamos uma confirmação detalhada. Você também receberá um lembrete automático 1 hora antes.
         </p>
 
-        <Link href="/cliente">
-          <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-10 py-4 rounded-2xl transition-colors text-lg">
-            Voltar ao início
-          </button>
-        </Link>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+          <Link href="/cliente/agendamentos">
+            <button className="bg-purple-600 hover:bg-purple-700 text-white font-bold px-8 py-4 rounded-2xl transition-colors text-base">
+              Ver meus agendamentos
+            </button>
+          </Link>
+          <Link href="/cliente">
+            <button className="bg-white hover:bg-gray-50 text-gray-700 font-bold px-8 py-4 rounded-2xl border-2 border-gray-200 hover:border-purple-300 transition-colors text-base">
+              Voltar ao início
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { Sparkles, Search, Store, User } from "lucide-react";
+import { Sparkles, Search, Store, User, CalendarDays } from "lucide-react";
 
 interface NavbarProps {
-  paginaAtiva?: "inicio" | "perfil" | "salao";
+  paginaAtiva?: "inicio" | "perfil" | "salao" | "agendamentos";
   ladoSalao?: boolean;
 }
 
@@ -46,6 +46,16 @@ export default function Navbar({ paginaAtiva, ladoSalao = false }: NavbarProps) 
                 }`}
               >
                 Início
+              </Link>
+              <Link
+                href="/cliente/agendamentos"
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  paginaAtiva === "agendamentos" ? "text-violet-700 bg-violet-50" : "text-gray-600 hover:bg-gray-50"
+                }`}
+              >
+                <CalendarDays className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Meus agendamentos</span>
+                <span className="sm:hidden">Agenda</span>
               </Link>
               <Link
                 href="/salao/onboarding"

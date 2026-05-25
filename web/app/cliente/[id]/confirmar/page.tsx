@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MapPin, Clock, Calendar, ChevronLeft } from "lucide-react";
 import Navbar from "@/components/navbar";
+import ConfirmarAgendamentoBotao from "@/components/confirmar-agendamento-botao";
 import { getSalao, formatarDataCompleta } from "@/lib/mock-data";
 import { notFound } from "next/navigation";
 
@@ -80,11 +81,13 @@ export default async function ConfirmarPage({
           Ao confirmar, você receberá um lembrete automático 24h antes do atendimento.
         </p>
 
-        <Link href={sucesso}>
-          <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors text-lg">
-            Confirmar agendamento
-          </button>
-        </Link>
+        <ConfirmarAgendamentoBotao
+          salaoId={id}
+          servicoId={servicoId}
+          dia={dia}
+          hora={hora}
+          sucessoHref={sucesso}
+        />
       </div>
     </div>
   );
