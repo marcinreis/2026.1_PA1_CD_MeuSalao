@@ -39,23 +39,46 @@ export type Salao = {
   servicos: Servico[];
   avaliacoes: Avaliacao[];
   horariosDisponiveis: string[];
-  horariosOcupados: Set<string>; // "YYYY-MM-DD|HH:MM"
+  /** Função determinística — protótipo simula ocupação sem mock de datas fixas. */
+  estaOcupado: (dia: string, hora: string) => boolean;
   agenda: AgendamentoSalao[];
   buscasSemana: number;
   lat: number; // latitude
   lng: number; // longitude
 };
 
-// Next 7 days from 2026-04-15
-const DAYS = [
-  "2026-04-15",
-  "2026-04-16",
-  "2026-04-17",
-  "2026-04-18",
-  "2026-04-19",
-  "2026-04-20",
-  "2026-04-21",
-];
+// Hash determinístico — mesmo (salaoId, dia, hora) sempre devolve o mesmo bool.
+// Sem random pra evitar flicker entre render no servidor e no cliente.
+function ocupadoDeterministico(salaoId: string, dia: string, hora: string, taxaPercent: number): boolean {
+  const semente = `${salaoId}|${dia}|${hora}`;
+  let h = 2166136261;
+  for (let i = 0; i < semente.length; i++) {
+    h ^= semente.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  // Normaliza para 0..99 e compara com a taxa de ocupação desejada
+  return (h >>> 0) % 100 < taxaPercent;
+}
+
+// Gera N dias a partir de hoje no formato YYYY-MM-DD (timezone local).
+// Centraliza a fonte da verdade para o calendário, sucesso, agendamentos etc.
+function gerarDias(quantidade: number, inicio: Date = new Date()): string[] {
+  const out: string[] = [];
+  const base = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate());
+  for (let i = 0; i < quantidade; i++) {
+    const d = new Date(base);
+    d.setDate(base.getDate() + i);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    out.push(`${yyyy}-${mm}-${dd}`);
+  }
+  return out;
+}
+
+// Janela visível no seletor de horários. Mantida fora do bundle de
+// salões para que o calendário cresça sem mexer no mock de cada salão.
+const DAYS = gerarDias(7);
 
 const HORARIOS = [
   "09:00","09:30","10:00","10:30","11:00","11:30",
@@ -94,11 +117,7 @@ export const saloes: Salao[] = [
       { id: "a3", cliente: "Juliana M.", nota: 4, texto: "Gostei muito do corte, ela realmente ouviu o que eu queria.", data: "5 abr 2026" },
     ],
     horariosDisponiveis: HORARIOS,
-    horariosOcupados: new Set([
-      "2026-04-15|09:00","2026-04-15|10:00","2026-04-15|14:00",
-      "2026-04-16|09:30","2026-04-16|11:00","2026-04-16|15:00",
-      "2026-04-17|13:00","2026-04-17|14:30",
-    ]),
+    estaOcupado: (dia, hora) => ocupadoDeterministico("salao-da-marcia", dia, hora, 35),
     agenda: [
       { id: "ag1", cliente: "Ana Paula", hora: "09:00", servico: "Manicure", status: "confirmado" },
       { id: "ag2", cliente: "Fernanda S.", hora: "10:00", servico: "Corte feminino", status: "confirmado" },
@@ -139,11 +158,7 @@ export const saloes: Salao[] = [
       { id: "a3", cliente: "Camila R.", nota: 5, texto: "Fiz mechas aqui e ficou lindo. Atendimento de altíssimo nível.", data: "7 abr 2026" },
     ],
     horariosDisponiveis: HORARIOS,
-    horariosOcupados: new Set([
-      "2026-04-15|09:00","2026-04-15|09:30","2026-04-15|10:00",
-      "2026-04-16|11:00","2026-04-16|13:00","2026-04-16|14:00","2026-04-16|15:00",
-      "2026-04-17|09:00","2026-04-17|10:30","2026-04-17|16:00",
-    ]),
+    estaOcupado: (dia, hora) => ocupadoDeterministico("studio-renata", dia, hora, 55),
     agenda: [
       { id: "ag1", cliente: "Beatriz K.", hora: "09:00", servico: "Mechas e luzes", status: "confirmado" },
       { id: "ag2", cliente: "Mariana F.", hora: "11:00", servico: "Coloração completa", status: "confirmado" },
@@ -184,11 +199,7 @@ export const saloes: Salao[] = [
       { id: "a3", cliente: "Diego F.", nota: 4, texto: "Corte ótimo, ambiente bem legal. Sempre saio satisfeito.", data: "6 abr 2026" },
     ],
     horariosDisponiveis: HORARIOS,
-    horariosOcupados: new Set([
-      "2026-04-15|09:00","2026-04-15|09:30","2026-04-15|11:00",
-      "2026-04-16|10:00","2026-04-16|13:30","2026-04-16|16:00",
-      "2026-04-17|09:00","2026-04-17|14:00","2026-04-17|15:30",
-    ]),
+    estaOcupado: (dia, hora) => ocupadoDeterministico("barba-e-corte", dia, hora, 40),
     agenda: [
       { id: "ag1", cliente: "Roberto A.", hora: "09:00", servico: "Corte + barba", status: "confirmado" },
       { id: "ag2", cliente: "Pedro H.", hora: "10:00", servico: "Corte masculino", status: "confirmado" },
@@ -229,11 +240,7 @@ export const saloes: Salao[] = [
       { id: "a3", cliente: "Aline C.", nota: 5, texto: "Micropigmentação ficou natural e duradoura. Amei o resultado!", data: "8 abr 2026" },
     ],
     horariosDisponiveis: HORARIOS,
-    horariosOcupados: new Set([
-      "2026-04-15|10:00","2026-04-15|13:30","2026-04-15|15:00",
-      "2026-04-16|09:00","2026-04-16|11:30","2026-04-16|14:00",
-      "2026-04-17|10:00","2026-04-17|13:00","2026-04-17|16:30",
-    ]),
+    estaOcupado: (dia, hora) => ocupadoDeterministico("espaco-bella", dia, hora, 25),
     agenda: [
       { id: "ag1", cliente: "Carla M.", hora: "09:00", servico: "Limpeza de pele", status: "confirmado" },
       { id: "ag2", cliente: "Lívia P.", hora: "10:30", servico: "Design de sobrancelha", status: "confirmado" },
@@ -248,15 +255,17 @@ export function getSalao(id: string): Salao | undefined {
   return saloes.find((s) => s.id === id);
 }
 
-export const DIAS_SEMANA = [
-  "2026-04-15",
-  "2026-04-16",
-  "2026-04-17",
-  "2026-04-18",
-  "2026-04-19",
-  "2026-04-20",
-  "2026-04-21",
-];
+// Janela de 90 dias (≈ mês atual + 2 à frente) no seletor de horários.
+export const DIAS_SEMANA = gerarDias(90);
+
+export function formatarMesAno(dateStr: string): string {
+  const date = new Date(dateStr + "T12:00:00");
+  const meses = [
+    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
+    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro",
+  ];
+  return `${meses[date.getMonth()]} ${date.getFullYear()}`;
+}
 
 export function formatarDia(dateStr: string): { diaSemana: string; dia: string } {
   const date = new Date(dateStr + "T12:00:00");
@@ -269,7 +278,10 @@ export function formatarDia(dateStr: string): { diaSemana: string; dia: string }
 
 export function formatarDataCompleta(dateStr: string): string {
   const date = new Date(dateStr + "T12:00:00");
-  const meses = ["jan","fev","mar","abr","mai","jun","jul","ago","set","out","nov","dez"];
+  const meses = [
+    "janeiro","fevereiro","março","abril","maio","junho",
+    "julho","agosto","setembro","outubro","novembro","dezembro",
+  ];
   const diasSemana = ["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
   return `${diasSemana[date.getDay()]}, ${date.getDate()} de ${meses[date.getMonth()]}`;
 }
