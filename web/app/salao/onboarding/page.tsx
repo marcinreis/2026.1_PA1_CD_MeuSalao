@@ -2,11 +2,34 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Sparkles, CheckCircle, Upload, Plus, Trash2, ChevronLeft, FileSpreadsheet, X } from "lucide-react";
+import { Sparkles, CheckCircle, Upload, Plus, Trash2, ChevronLeft, FileSpreadsheet, X, Copy } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
 
 type ServicoCadastro = { nome: string; preco: string; duracao: string };
+
+type DiaSemana = "seg" | "ter" | "qua" | "qui" | "sex" | "sab" | "dom";
+type HorarioDia = { ativo: boolean; abertura: string; fechamento: string };
+
+const DIAS: { id: DiaSemana; label: string; util: boolean }[] = [
+  { id: "seg", label: "Segunda", util: true },
+  { id: "ter", label: "Terça", util: true },
+  { id: "qua", label: "Quarta", util: true },
+  { id: "qui", label: "Quinta", util: true },
+  { id: "sex", label: "Sexta", util: true },
+  { id: "sab", label: "Sábado", util: false },
+  { id: "dom", label: "Domingo", util: false },
+];
+
+const HORARIOS_INICIAIS: Record<DiaSemana, HorarioDia> = {
+  seg: { ativo: true, abertura: "09:00", fechamento: "18:00" },
+  ter: { ativo: true, abertura: "09:00", fechamento: "18:00" },
+  qua: { ativo: true, abertura: "09:00", fechamento: "18:00" },
+  qui: { ativo: true, abertura: "09:00", fechamento: "18:00" },
+  sex: { ativo: true, abertura: "09:00", fechamento: "18:00" },
+  sab: { ativo: true, abertura: "09:00", fechamento: "14:00" },
+  dom: { ativo: false, abertura: "09:00", fechamento: "18:00" },
+};
 
 // Conteúdo mock de uma planilha CSV — usado para demonstrar a importação
 // sem precisar do parser real. Reflete o caso de uso da estratégia de
@@ -28,10 +51,13 @@ export default function OnboardingPage() {
   const [endereco, setEndereco] = useState("");
   const [telefone, setTelefone] = useState("");
   const [servicos, setServicos] = useState<ServicoCadastro[]>([{ nome: "", preco: "", duracao: "" }]);
+  const [horarios, setHorarios] = useState<Record<DiaSemana, HorarioDia>>(HORARIOS_INICIAIS);
+  const [erroHorario, setErroHorario] = useState<string | null>(null);
   const [modalImport, setModalImport] = useState<"fechado" | "selecionar" | "preview">("fechado");
   const [previewServicos, setPreviewServicos] = useState<ServicoCadastro[]>([]);
   const [nomeArquivo, setNomeArquivo] = useState("");
-  const progresso = (passo / 3) * 100;
+  const TOTAL_PASSOS = 4;
+  const progresso = (passo / TOTAL_PASSOS) * 100;
 
   function adicionarServico() { setServicos([...servicos, { nome: "", preco: "", duracao: "" }]); }
   function removerServico(i: number) { setServicos(servicos.filter((_, idx) => idx !== i)); }
@@ -66,6 +92,39 @@ export default function OnboardingPage() {
     setNomeArquivo("");
   }
 
+  function atualizarHorario(dia: DiaSemana, campo: keyof HorarioDia, valor: string | boolean) {
+    setHorarios((prev) => ({ ...prev, [dia]: { ...prev[dia], [campo]: valor } }));
+    setErroHorario(null);
+  }
+
+  function copiarParaUteis() {
+    const base = horarios.seg;
+    setHorarios((prev) => ({
+      ...prev,
+      ter: { ...base },
+      qua: { ...base },
+      qui: { ...base },
+      sex: { ...base },
+    }));
+  }
+
+  function validarHorarios(): boolean {
+    const algumAtivo = Object.values(horarios).some((h) => h.ativo);
+    if (!algumAtivo) {
+      setErroHorario("Marque pelo menos um dia de atendimento.");
+      return false;
+    }
+    for (const dia of DIAS) {
+      const h = horarios[dia.id];
+      if (!h.ativo) continue;
+      if (h.abertura >= h.fechamento) {
+        setErroHorario(`Em ${dia.label}, o horário de fechamento deve ser depois da abertura.`);
+        return false;
+      }
+    }
+    return true;
+  }
+
   // suppress unused variable warnings for form fields
   void nomeSalao; void endereco; void telefone;
 
@@ -95,7 +154,7 @@ export default function OnboardingPage() {
         <div className="bg-white rounded-3xl shadow-xl p-8 w-full max-w-lg">
           {/* Progress */}
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-gray-500">Passo {passo} de 3</span>
+            <span className="text-sm text-gray-500">Passo {passo} de {TOTAL_PASSOS}</span>
             <span className="text-sm font-semibold text-purple-600">{Math.round(progresso)}%</span>
           </div>
           <Progress value={progresso} className="h-2 mb-8 [&>div]:bg-purple-600" />
@@ -104,9 +163,14 @@ export default function OnboardingPage() {
           {passo === 1 && (
             <div className="text-center">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Bem-vindo!</h2>
-              <p className="text-gray-500 mb-8 leading-relaxed">Vamos cadastrar seu salão em 3 passos simples.</p>
-              <div className="grid grid-cols-3 gap-4 mb-8">
-                {[{ n: "1", t: "Dados" }, { n: "2", t: "Serviços" }, { n: "3", t: "Publicar" }].map((s) => (
+              <p className="text-gray-500 mb-8 leading-relaxed">Vamos cadastrar seu salão em 4 passos simples.</p>
+              <div className="grid grid-cols-4 gap-3 mb-8">
+                {[
+                  { n: "1", t: "Dados" },
+                  { n: "2", t: "Serviços" },
+                  { n: "3", t: "Horários" },
+                  { n: "4", t: "Publicar" },
+                ].map((s) => (
                   <div key={s.n} className="flex flex-col items-center gap-2">
                     <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center text-purple-600 font-bold">{s.n}</div>
                     <span className="text-xs text-gray-500">{s.t}</span>
@@ -171,14 +235,86 @@ export default function OnboardingPage() {
             </div>
           )}
 
+          {/* Passo 4 — Horários de funcionamento */}
+          {passo === 4 && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-1">Quando você atende?</h2>
+              <p className="text-gray-500 mb-4">Clientes só conseguem agendar nos horários que você ativar.</p>
+
+              <button
+                type="button"
+                onClick={copiarParaUteis}
+                className="w-full flex items-center justify-center gap-2 border border-purple-200 rounded-xl py-2.5 mb-4 text-sm text-purple-600 hover:bg-purple-50 transition-colors"
+              >
+                <Copy className="w-4 h-4" />
+                Aplicar horário de segunda a sexta
+              </button>
+
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
+                {DIAS.map((dia) => {
+                  const h = horarios[dia.id];
+                  return (
+                    <div key={dia.id} className={`rounded-xl border p-3 transition-colors ${h.ativo ? "bg-purple-50/40 border-purple-100" : "bg-gray-50 border-gray-100"}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <button
+                            type="button"
+                            onClick={() => atualizarHorario(dia.id, "ativo", !h.ativo)}
+                            aria-pressed={h.ativo}
+                            className={`relative w-10 h-6 rounded-full transition-colors ${h.ativo ? "bg-purple-600" : "bg-gray-300"}`}
+                          >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${h.ativo ? "translate-x-4" : ""}`} />
+                          </button>
+                          <span className={`text-sm font-semibold ${h.ativo ? "text-gray-900" : "text-gray-400"}`}>{dia.label}</span>
+                        </div>
+                        {h.ativo ? (
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="time"
+                              value={h.abertura}
+                              onChange={(e) => atualizarHorario(dia.id, "abertura", e.target.value)}
+                              className="px-2 py-1 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-purple-200"
+                            />
+                            <span className="text-gray-400 text-xs">às</span>
+                            <input
+                              type="time"
+                              value={h.fechamento}
+                              onChange={(e) => atualizarHorario(dia.id, "fechamento", e.target.value)}
+                              className="px-2 py-1 rounded-lg border border-gray-200 text-xs focus:outline-none focus:ring-2 focus:ring-purple-200"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400 italic">Fechado</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {erroHorario && (
+                <p className="text-xs text-red-500 mt-3 font-medium">{erroHorario}</p>
+              )}
+            </div>
+          )}
+
           {/* Footer buttons */}
           <div className="mt-8">
-            {passo < 3 ? (
-              <button onClick={() => setPasso(passo + 1)} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors">
+            {passo < TOTAL_PASSOS ? (
+              <button
+                onClick={() => setPasso(passo + 1)}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors"
+              >
                 {passo === 1 ? "Começar cadastro" : "Próximo"}
               </button>
             ) : (
-              <button onClick={() => router.push("/salao/dashboard")} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors">
+              <button
+                onClick={() => {
+                  if (!validarHorarios()) return;
+                  router.push("/salao/dashboard");
+                }}
+                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors"
+              >
                 Publicar meu salão
               </button>
             )}
