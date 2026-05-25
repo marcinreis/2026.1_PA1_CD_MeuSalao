@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Star, MapPin, Clock, Phone, Eye, TrendingUp, Pencil, Trash2 } from "lucide-react";
 import Navbar from "@/components/navbar";
-import AvaliacaoItem from "@/components/avaliacao-item";
+import AvaliacoesLista from "@/components/avaliacoes-lista";
 import { saloes } from "@/lib/mock-data";
 
 export default function PerfilPublicoPage() {
@@ -112,11 +112,7 @@ export default function PerfilPublicoPage() {
 
         {/* Reviews */}
         <h2 className="text-xl font-bold text-gray-900 mb-4">Avaliações dos Clientes</h2>
-        <div className="space-y-4">
-          {salao.avaliacoes.map((av) => (
-            <AvaliacaoItem key={av.id} avaliacao={av} />
-          ))}
-        </div>
+        <AvaliacoesLista salaoId={salao.id} base={salao.avaliacoes} layout="stack" />
       </div>
     </div>
   );

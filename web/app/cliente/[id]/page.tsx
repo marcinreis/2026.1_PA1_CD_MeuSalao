@@ -3,7 +3,7 @@ import { Star, MapPin, Clock, Phone, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
 import ServicoItem from "@/components/servico-item";
-import AvaliacaoItem from "@/components/avaliacao-item";
+import AvaliacoesLista from "@/components/avaliacoes-lista";
 import SalaoFoto from "@/components/salao-foto";
 import { getSalao } from "@/lib/mock-data";
 
@@ -95,11 +95,7 @@ export default async function PerfilSalaoPage({
               <h2 className="font-black text-gray-900 text-xl mb-4">
                 Avaliações <span className="text-gray-400 font-normal text-base">({salao.totalAvaliacoes})</span>
               </h2>
-              <div className="space-y-3">
-                {salao.avaliacoes.map((av) => (
-                  <AvaliacaoItem key={av.id} avaliacao={av} />
-                ))}
-              </div>
+              <AvaliacoesLista salaoId={salao.id} base={salao.avaliacoes} />
             </div>
           </div>
 
