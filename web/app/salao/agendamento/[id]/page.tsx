@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
-import { User, Clock, Scissors, CheckCircle, Phone, ChevronLeft } from "lucide-react";
+import { User, Clock, Scissors, Phone, ChevronLeft } from "lucide-react";
 import Link from "next/link";
 import Navbar from "@/components/navbar";
+import AgendamentoAcoes from "@/components/agendamento-acoes";
 import { saloes } from "@/lib/mock-data";
 
 export default async function DetalheAgendamentoPage({
@@ -28,17 +29,8 @@ export default async function DetalheAgendamentoPage({
           Voltar ao dashboard
         </Link>
 
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 gap-3 flex-wrap">
           <h1 className="text-2xl font-bold text-gray-900">Detalhe do agendamento</h1>
-          <span
-            className={`text-sm font-semibold px-4 py-1.5 rounded-full ${
-              agendamento.status === "confirmado"
-                ? "bg-green-100 text-green-700"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {agendamento.status === "confirmado" ? "Confirmado" : "Aguardando confirmação"}
-          </span>
         </div>
 
         <div className="space-y-4 mb-8">
@@ -76,19 +68,11 @@ export default async function DetalheAgendamentoPage({
           </div>
         </div>
 
-        {agendamento.status === "pendente" ? (
-          <Link href="/salao/dashboard">
-            <button className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-4 rounded-2xl transition-colors text-lg flex items-center justify-center gap-2">
-              <CheckCircle className="w-5 h-5" />
-              Confirmar agendamento
-            </button>
-          </Link>
-        ) : (
-          <div className="flex items-center justify-center gap-3 bg-green-50 border border-green-100 rounded-2xl py-5">
-            <CheckCircle className="w-6 h-6 text-green-600" />
-            <p className="text-green-700 font-semibold">Agendamento já confirmado</p>
-          </div>
-        )}
+        <AgendamentoAcoes
+          salaoId={salao.id}
+          agendamentoId={agendamento.id}
+          statusInicial={agendamento.status}
+        />
       </div>
     </div>
   );
